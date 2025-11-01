@@ -34,11 +34,12 @@ func (tf *TorrentFile) RequestPeers(peerID [20]byte, port uint16) ([]Peer, error
 	params := url.Values{
 		"info_hash":  []string{string(tf.InfoHash[:])},
 		"peer_id":    []string{string(peerID[:])},
-		"port":       []string{strconv.FormatUint(uint64(port), 10)},
+		"port":       []string{strconv.Itoa(int(port))},
 		"uploaded":   []string{"0"},
 		"downloaded": []string{"0"},
-		"left":      []string{strconv.FormatUint(uint64(tf.Length), 10)},
+		"left":      []string{strconv.FormatInt(int64(tf.Length), 10)},
 		"compact":    []string{"1"},
+		"numwant":    []string{"50"},
 	}
 
 	baseURL.RawQuery = params.Encode()
@@ -46,6 +47,7 @@ func (tf *TorrentFile) RequestPeers(peerID [20]byte, port uint16) ([]Peer, error
 	
 	fmt.Printf("Requesting peers from tracker: %s\n", trackerURL)
 	
+	//c:=&http.Client{Time}
 	resp, err := http.Get(trackerURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to tracker: %v", err)
@@ -69,13 +71,38 @@ func (tf *TorrentFile) RequestPeers(peerID [20]byte, port uint16) ([]Peer, error
 	if !ok {
 		return nil, fmt.Errorf("invalid tracker response format")
 	}
+	// for k := range trackerMap {
+	// 	fmt.Printf("  - %s\n", k)
+	// }
 
-	if interval, ok := trackerMap["interval"].(int64); ok {
-		trackerRes.Interval = int(interval)
+	if v, ok := trackerMap["interval"]; ok {
+		switch iv := v.(type) {
+		case int64:
+			trackerRes.Interval = int(iv)
+			fmt.Println("Tracker interval:", trackerRes.Interval)
+		case int:
+			trackerRes.Interval = iv
+			fmt.Println("Tracker interval:", trackerRes.Interval)
+		default:
+			fmt.Printf("Tracker interval: unexpected type %T\n", v)
+		}
+	} else {
+		fmt.Println("Tracker response contains no 'interval' field")
 	}
-	
-	if peers, ok := trackerMap["peers"].(string); ok {
-		trackerRes.Peers = peers
+
+	// Handle peers safely
+	if peersRaw, ok := trackerMap["peers"].(string); ok {
+		peersBytes := []byte(peersRaw)
+		fmt.Printf("Peers field: %d bytes (compact form)\n", len(peersBytes))
+		// print a short hex preview to avoid terminal control characters
+		preview := 32
+		if len(peersBytes) < preview {
+			preview = len(peersBytes)
+		}
+		if preview > 0 {
+			fmt.Printf("Peers preview (hex, first %d bytes): %x\n", preview, peersBytes[:preview])
+		}
+		trackerRes.Peers = peersRaw
 	} else {
 		return nil, fmt.Errorf("no peers in tracker response")
 	}
@@ -96,7 +123,7 @@ func parsePeers(peersBin []byte) ([]Peer, error) {
 		peers[i].IP = net.IP(peersBin[offset : offset+4])
 		peers[i].Port = binary.BigEndian.Uint16(peersBin[offset+4 : offset+6])
 	}
-
+	fmt.Println("Parsed peers: ",peers)
 	return peers, nil
 }
 

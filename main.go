@@ -5,6 +5,9 @@ import (
 	"os"
 	"torrent/p2p"
 	"math/rand"
+	"net"
+	"time"
+	"strconv"
 )
 
 func main(){
@@ -53,4 +56,39 @@ func main(){
 		fmt.Printf("Error requesting peers: %v\n", err)
 	}
 	fmt.Printf("Received %d peers from tracker\n",len(peers))
+
+	if len(peers)==0{
+		fmt.Println("No peers Found")
+		return
+	}
+	for _,peer:=range peers{
+		fmt.Printf("Peer IP: %s, Port: %d\n",peer.IP.String(),peer.Port)
+		conn,err:=net.DialTimeout("tcp",peer.IP.String()+":"+strconv.Itoa(int(peer.Port)),15*time.Second)
+		if err!=nil{
+			fmt.Printf("Failed to connect to peer %s:%d - %v\n",peer.IP.String(),peer.Port,err)
+			continue
+		}
+		defer conn.Close()
+
+		myHandshake:=p2p.NewHandshake(tf.InfoHash,peerID)
+		_,err=conn.Write(myHandshake.Serialize())
+		if err!=nil{
+			fmt.Printf("Error sending handshake to %s:%d - %v\n",peer.IP.String(),peer.Port,err)
+			continue
+		}
+
+		peerHandshake,err:=p2p.ReadHandshake(conn)
+		if err!=nil{
+			fmt.Printf("Error reading handshake from %s:%d - %v\n",peer.IP.String(),peer.Port,err)
+			continue
+		}
+
+		if myHandshake.InfoHash != peerHandshake.InfoHash {
+			fmt.Printf("InfoHash mismatch with peer %s:%d\n",peer.IP.String(),peer.Port)
+			continue
+		}
+		fmt.Printf("Successfully connected to peer %s:%d\n",peer.IP.String(),peer.Port)
+		break
+
+	}
 }

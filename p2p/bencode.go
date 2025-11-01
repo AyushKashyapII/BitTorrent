@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"strconv"
 	"bytes"
+	"sort"
 )
 
 func Unmarshal(reader *bufio.Reader) (interface{},error) {
@@ -144,10 +145,16 @@ func marshalTo(buf *bytes.Buffer, value interface{}) error {
 		}
 		buf.WriteByte('e')
 	case map[string]interface{}:
+		// Bencode requires dictionary keys to be sorted lexicographically.
 		buf.WriteByte('d')
-		for key, val := range v {
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
 			fmt.Fprintf(buf, "%d:%s", len(key), key)
-			if err := marshalTo(buf, val); err != nil {
+			if err := marshalTo(buf, v[key]); err != nil {
 				return err
 			}
 		}
