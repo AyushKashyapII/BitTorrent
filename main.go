@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"torrent/p2p"
+	"math/rand"
 )
 
 func main(){
@@ -14,17 +15,42 @@ func main(){
 	}
 
 	torrentPath:=os.Args[1]
-	file,err:=os.Open(torrentPath)
-	if err!=nil{
-		fmt.Println("Error opeing torrent file")
+	fmt.Println("torrent [ath ]",torrentPath)
+	file, err := os.Open(torrentPath)
+	if err != nil {
+		fmt.Printf("Error opening torrent file: %v\n", err)
 		return
 	}
 	defer file.Close()
 
-	tf,err:=p2p.Open(file)
-	if err!=nil{
-		fmt.Printf("Error parsing torrent file",err)
+	tf, err := p2p.Open(file)
+	if err != nil {
+		fmt.Printf("Error parsing torrent file: %v\n", err)
 		return
 	}
-	fmt.Println("Torrent file:",tf)
+	fmt.Printf("Torrent File Info:\n"+
+		"Name: %s\n"+
+		"Announce URL: %s\n"+
+		"Length: %d bytes\n"+
+		"Piece Length: %d bytes\n"+
+		"Number of Pieces: %d\n",
+		tf.Name,
+		tf.Announce,
+		tf.Length,
+		tf.PieceLength,
+		len(tf.PieceHashes))
+
+	var peerID [20]byte
+	_,err=rand.Read(peerID[:])
+	if err!=nil{
+		fmt.Printf("Error generating peer ID: %v\n", err)
+		return 
+	}
+
+	var port uint16 = 6881
+	peers,err:=tf.RequestPeers(peerID,port)
+	if err!=nil{
+		fmt.Printf("Error requesting peers: %v\n", err)
+	}
+	fmt.Printf("Received %d peers from tracker\n",len(peers))
 }
