@@ -1,1 +1,9 @@
-.torrent
+# Ignore BitTorrent torrent files
+*.torrent
+
+# Optional: ignore local build artifacts and editor files
+*.exe
+*.log
+.DS_Store
+node_modules/
+dist/.torrent
