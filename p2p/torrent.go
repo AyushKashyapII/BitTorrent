@@ -29,17 +29,17 @@ func Open(r io.Reader) (*TorrentFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	torrentMap, ok := bto.(map[string]interface{})
+	torrentMap,ok:=bto.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("could not parse torrent file: top level is not a dictionary")
 	}
 
-	announce, ok := torrentMap["announce"].(string)
-	if !ok {
+	announce,ok:=torrentMap["announce"].(string)
+	if !ok{
 		return nil, fmt.Errorf("could not parse announce url")
 	}
 
-	infoMap, ok := torrentMap["info"].(map[string]interface{})
+	infoMap,ok:=torrentMap["info"].(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("could not parse info dictionary")
 	}
@@ -75,7 +75,7 @@ func hashInfo(info map[string]interface{}) ([20]byte, error) {
 	if err != nil {
 		return [20]byte{}, err
 	}
-	return sha1.Sum(buf.Bytes()), nil
+	return sha1.Sum(buf.Bytes()),nil
 }
 
 func parseInfo(info map[string]interface{}) (*bencodeInfo, error) {

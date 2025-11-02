@@ -15,6 +15,7 @@ import (
 type Peer struct {
 	IP   net.IP
 	Port uint16
+	Choked bool 
 }
 
 type TrackerResponse struct {
@@ -61,7 +62,7 @@ func (tf *TorrentFile) RequestPeers(peerID [20]byte, port uint16) ([]Peer, error
 
 	var trackerRes TrackerResponse
 	reader := bufio.NewReader(bytes.NewReader(body))
-	bencodeData, err := Unmarshal(reader)
+	bencodeData,err:=Unmarshal(reader)
 	if err != nil {
 		fmt.Printf("Raw response: %s\n", string(body))
 		return nil, fmt.Errorf("failed to parse tracker response: %v", err)
@@ -122,6 +123,7 @@ func parsePeers(peersBin []byte) ([]Peer, error) {
 		offset := i * peerSize
 		peers[i].IP = net.IP(peersBin[offset : offset+4])
 		peers[i].Port = binary.BigEndian.Uint16(peersBin[offset+4 : offset+6])
+		peers[i].Choked=true
 	}
 	fmt.Println("Parsed peers: ",peers)
 	return peers, nil
