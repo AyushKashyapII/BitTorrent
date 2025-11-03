@@ -24,7 +24,7 @@ type PieceManager struct {
 	PiecesDownloaded chan *PieceState
 }
 
-func NewPieceManager(tf *TorrentFile) *PieceManager {
+func NewPieceManager(tf *TorrentFile) *PieceManager{
 	numPieces:=len(tf.PieceHashes)
 	pieces:=make([]PieceState,numPieces)
 	piecesNeeded:=make(chan *PieceState,numPieces)
@@ -41,6 +41,7 @@ func NewPieceManager(tf *TorrentFile) *PieceManager {
 			Index:i,
 			PieceHash:hash,
 			Size:pieceSize,
+			Data:make([]byte, pieceSize),
 			BlocksRequested:make([]bool,numBlocks),
 			BlockReceived:make([]bool,numBlocks),
 		}
