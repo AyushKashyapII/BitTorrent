@@ -14,20 +14,6 @@ GoPherSwarm is a functional BitTorrent client written from scratch in Go. This p
 
 This client is an educational tool designed to explore the inner workings of a complex, distributed P2P system.
 
-## In Action
-
-A screenshot of GoPherSwarm successfully downloading a file from the BitTorrent network, showcasing the real-time progress bar and download speed.
-
-![GoPherSwarm Progress Bar](./assets/Screenshot 2025-11-04 150159.png)
-
-<details>
-  <summary><b>Click to see the startup and tracker communication details</b></summary>
-  
-  The client starts by parsing the torrent file, extracting its metadata, and making a request to the tracker to discover peers before initiating the download.
-  
-  ![GoPherSwarm Startup Log](./assets/startup-log.png)
-</details>
-
 ## Features
 
 -   **`.torrent` File Parsing:** Full support for parsing Bencoded torrent metadata files.
