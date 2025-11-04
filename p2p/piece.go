@@ -1,8 +1,9 @@
 package p2p 
 import(
-	"fmt"
+//	"fmt"
 	"bytes"
 	"crypto/sha1"
+	"github.com/schollz/progressbar/v3"
 )
 
 const BlockSize=16*1024
@@ -63,19 +64,20 @@ func (pm *PieceManager) CheckPieceHash(piece *PieceState,data []byte) bool {
 	return bytes.Equal(hash[:],piece.PieceHash[:])
 }
 
-func (pm *PieceManager) WorkLoop(done chan struct{}){
+func (pm *PieceManager) WorkLoop(done chan struct{},bar *progressbar.ProgressBar){
 	for{
 		piece:=<-pm.PiecesDownloaded
 		if pm.CheckPieceHash(piece,piece.Data) {
-			fmt.Printf("Piece %d downloaded and verified successfully\n",piece.Index)
+			//fmt.Printf("Piece %d downloaded and verified successfully\n",piece.Index)
 			pm.CompletedPieces++
+			bar.Add(piece.Size)
 		}else {
-			fmt.Printf("Piece %d failed verification, re-queuing\n",piece.Index)
+			//fmt.Printf("Piece %d failed verification, re-queuing\n",piece.Index)
 			pm.PiecesNeeded<-piece
 		}
 
 		if pm.CompletedPieces==pm.TotalPieces{
-			fmt.Println("All pieces downloaded successfully!")
+			//fmt.Println("All pieces downloaded successfully!")
 			close(pm.PiecesDownloaded)
 			close(done)
 			return

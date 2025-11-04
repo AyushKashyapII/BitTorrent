@@ -5,6 +5,11 @@ import (
 	"os"
 	"torrent/p2p"
 	"math/rand"
+	"time"
+	// "context"
+	// "os/signal"
+	// "syscall"
+	"github.com/schollz/progressbar/v3"
 )
 
 func main(){
@@ -15,6 +20,17 @@ func main(){
 	}
 
 	torrentPath:=os.Args[1]
+	// ctx,cancel:=context.WithCancel(context.Background())
+	// defer cancel()
+
+	// signalChan:=make(chan os.Signal,1)
+	// signal.Notify(signalChan,os.Interrupt,syscall.SIGTERM)
+
+	// go func(){
+	// 	<-signalChan
+	// 	fmt.Println("Received interrupt signal, shutting down...")
+	// 	cancel()
+	// }()
 	//fmt.Println("torrent [ath ]",torrentPath)
 	file, err := os.Open(torrentPath)
 	if err != nil {
@@ -61,24 +77,37 @@ func main(){
 	}
 
 	c,err:=p2p.NewClient(tf,peerID,peers)
+
+	bar := progressbar.NewOptions64(
+		int64(tf.Length),
+		progressbar.OptionSetDescription("Downloading..."),
+		progressbar.OptionSetWriter(os.Stdout),
+		progressbar.OptionShowBytes(true),
+		progressbar.OptionSetWidth(40),
+		progressbar.OptionThrottle(65*time.Millisecond),
+		progressbar.OptionOnCompletion(func() {
+			fmt.Fprint(os.Stderr, "\n")
+		}),
+		progressbar.OptionSpinnerType(14),
+	)
 	if err!=nil{
 		fmt.Println("Error in creating the client",err)
 		return 
 	}
-	done,err:=c.Download()
+	done,err:=c.Download(bar)
 	if err!=nil{
 		fmt.Println("Error during download:", err)
 		return
 	}
 	<-done
-	file,err:=os.Create(tf.Name)
+	outputFile,err:=os.Create(tf.Name)
 	if err!=nil{
 		fmt.Printf("Error creating output file: %v\n", err)
 	}
-	defer file.CLose()
+	defer outputFile.Close()
 
 	for _,piece:= range c.PieceManager.Pieces{
-		_,err:=file.Write(piece.Data)
+		_,err:=outputFile.Write(piece.Data)
 		if err!=nil{
 			fmt.Printf("Error writing piece %d to file: %v\n", piece.Index, err)
 			return

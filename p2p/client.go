@@ -4,7 +4,8 @@ import (
 	"strconv"
 	"net"
 	"time"
-	"fmt"
+	//"fmt"
+	"github.com/schollz/progressbar/v3"
 )
 
 type Client struct {
@@ -24,9 +25,9 @@ func NewClient(tf *TorrentFile,peerID [20]byte,peers []Peer) (*Client,error){
 	},nil
 }
 
-func (c *Client) Download() (chan struct{},error){
+func (c *Client) Download(bar *progressbar.ProgressBar) (chan struct{},error){
 	done:=make(chan struct{})
-	go c.PieceManager.WorkLoop(done)
+	go c.PieceManager.WorkLoop(done,bar)
 	//var wg sync.WaitGroup
 	for _,peer := range c.Peers{
 		//wg.Add(1)
@@ -44,61 +45,61 @@ func (c *Client) startPeerWorker(peer Peer){
 		conn,err:=net.DialTimeout("tcp",peer.IP.String()+":"+strconv.Itoa(int(peer.Port)),15*time.Second)
 		
 		if err!=nil{
-			fmt.Printf("Failed to connect to peer %s:%d - %v\n", peer.IP.String(), peer.Port, err)
+			//fmt.Printf("Failed to connect to peer %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 			return 
 		}
 		defer conn.Close()
 		myHandshake := NewHandshake(c.TorrentFile.InfoHash, c.PeerID)
 		_, err = conn.Write(myHandshake.Serialize())
 		if err != nil {
-			fmt.Printf("Error sending handshake to %s:%d - %v\n", peer.IP.String(), peer.Port, err)
+			//fmt.Printf("Error sending handshake to %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 			conn.Close()
 			return 
 		}
 
 		peerHandshake, err := ReadHandshake(conn)
 		if err != nil {
-			fmt.Printf("Error reading handshake from %s:%d - %v\n", peer.IP.String(), peer.Port, err)
+			//fmt.Printf("Error reading handshake from %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 			conn.Close()
 			return 
 		}
 
 		if myHandshake.InfoHash != peerHandshake.InfoHash {
-			fmt.Printf("InfoHash mismatch with peer %s:%d\n", peer.IP.String(), peer.Port)
+			//fmt.Printf("InfoHash mismatch with peer %s:%d\n", peer.IP.String(), peer.Port)
 			conn.Close()
 			return 
 		}
-		fmt.Printf("Successfully connected to peer %s:%d\n", peer.IP.String(), peer.Port)
+		//fmt.Printf("Successfully connected to peer %s:%d\n", peer.IP.String(), peer.Port)
 
 		conn.SetDeadline(time.Now().Add(5*time.Second))
 		msg,err:=ReadMessage(conn)
 		if err!=nil{
-			fmt.Println("Erro in reading the bitfield",peer.IP)
+			//fmt.Println("Erro in reading the bitfield",peer.IP)
 			return 
 		}
 		conn.SetDeadline(time.Time{})
 
 		if msg==nil|| msg.ID!=MessageBitfield {
-			fmt.Println("Wrong type of message back !!!")
+			//fmt.Println("Wrong type of message back !!!")
 			return 
 		}
 
 		peerBitfield:=msg.Payload
-		fmt.Println("received peer bit field ",len(peerBitfield))
+		//fmt.Println("received peer bit field ",len(peerBitfield))
 		
 		pc:=NewPeerConnection()
 		
 		interestedMsg:=NewInterested()
 		_,err=conn.Write(interestedMsg.Serialize())
 		if err!=nil{
-			fmt.Printf("Error sending interested message to %s:%d - %v\n", peer.IP.String(), peer.Port, err)
+			//fmt.Printf("Error sending interested message to %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 			return
 		}
 
 		for piece:=range c.PieceManager.PiecesNeeded{
-			fmt.Printf("Requesting piece %d from peer %s\n", piece.Index, peer.IP.String())
+			//fmt.Printf("Requesting piece %d from peer %s\n", piece.Index, peer.IP.String())
 			if !pc.HasPiece(piece.Index, peerBitfield){
-				fmt.Printf("Peer %s does not have piece %d, re-queuing\n", peer.IP.String(), piece.Index)
+				//fmt.Printf("Peer %s does not have piece %d, re-queuing\n", peer.IP.String(), piece.Index)
 				c.PieceManager.PiecesNeeded<-piece
 				continue
 			}
@@ -116,7 +117,7 @@ func (c *Client) startPeerWorker(peer Peer){
 					requestMsg:=NewRequest(piece.Index,downloadedBlocks*BlockSize,blockSize)
 					_,err=conn.Write(requestMsg.Serialize())
 					if err!=nil{
-						fmt.Printf("Error sending request message to %s:%d - %v\n", peer.IP.String(), peer.Port, err)
+						//fmt.Printf("Error sending request message to %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 						return
 					}
 
@@ -124,7 +125,7 @@ func (c *Client) startPeerWorker(peer Peer){
 				conn.SetDeadline(time.Now().Add(1*time.Minute))
 				msg,err:=ReadMessage(conn)
 				if err!=nil{
-					fmt.Printf("Error reading message from %s:%d - %v\n", peer.IP.String(), peer.Port, err)
+					//fmt.Printf("Error reading message from %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 					return 
 				}
 				if msg==nil{
@@ -133,12 +134,12 @@ func (c *Client) startPeerWorker(peer Peer){
 				if msg.ID==MessagePiece{
 					pieceMsg,err:=ParsePiece(piece.Index, msg.Payload)
 					if err!=nil{
-						fmt.Printf("Error parsing piece message from %s:%d - %v\n", peer.IP.String(), peer.Port, err)
+						//fmt.Printf("Error parsing piece message from %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 						return 
 					}
 					if pieceMsg.Begin+len(pieceMsg.Block) > len(piece.Data) {
-						fmt.Printf("Error: Block bounds exceed piece size. Begin: %d, Block size: %d, Piece size: %d\n",
-							pieceMsg.Begin, len(pieceMsg.Block), len(piece.Data))
+						//fmt.Printf("Error: Block bounds exceed piece size. Begin: %d, Block size: %d, Piece size: %d\n",
+						//	pieceMsg.Begin, len(pieceMsg.Block), len(piece.Data))
 						return
 					}
 					copy(piece.Data[pieceMsg.Begin:pieceMsg.Begin+len(pieceMsg.Block)],pieceMsg.Block)
@@ -150,7 +151,7 @@ func (c *Client) startPeerWorker(peer Peer){
 					}
 					inFlightRequests--
 					c.PieceManager.PiecesDownloaded<-piece
-					fmt.Printf("Received block for piece %d from peer %s\n", piece.Index, peer.IP.String())
+					//fmt.Printf("Received block for piece %d from peer %s\n", piece.Index, peer.IP.String())
 				}
 				if msg.ID==MessageChoke{
 					pc.Choked=true
