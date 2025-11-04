@@ -71,5 +71,19 @@ func main(){
 		return
 	}
 	<-done
+	file,err:=os.Create(tf.Name)
+	if err!=nil{
+		fmt.Printf("Error creating output file: %v\n", err)
+	}
+	defer file.CLose()
+
+	for _,piece:= range c.PieceManager.Pieces{
+		_,err:=file.Write(piece.Data)
+		if err!=nil{
+			fmt.Printf("Error writing piece %d to file: %v\n", piece.Index, err)
+			return
+		}
+	}
+	fmt.Println("File written successfully")
 	fmt.Println("Download completed successfully")
 }

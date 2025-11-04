@@ -42,11 +42,12 @@ func (c *Client) Download() (chan struct{},error){
 func (c *Client) startPeerWorker(peer Peer){
 		//defer wg.Done()
 		conn,err:=net.DialTimeout("tcp",peer.IP.String()+":"+strconv.Itoa(int(peer.Port)),15*time.Second)
-		defer conn.Close()
+		
 		if err!=nil{
 			fmt.Printf("Failed to connect to peer %s:%d - %v\n", peer.IP.String(), peer.Port, err)
 			return 
 		}
+		defer conn.Close()
 		myHandshake := NewHandshake(c.TorrentFile.InfoHash, c.PeerID)
 		_, err = conn.Write(myHandshake.Serialize())
 		if err != nil {
