@@ -1,9 +1,9 @@
 # GoPherSwarm - A BitTorrent Client in Go
 
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" width="55" height="85" alt="Go Logo" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" width="55" height="55" alt="Go Logo" />
   &nbsp; &nbsp; &nbsp; &nbsp;
-  
+  <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/BitTorrent_logo.svg" width="55" height="55" alt="BitTorrent Logo" />
 </p>
 <p align="center">
   <i>A functional BitTorrent client written from scratch to explore concurrency, networking, and distributed systems in Go.</i>
@@ -15,11 +15,19 @@ GoPherSwarm is a functional BitTorrent client written from scratch in Go. This p
 
 This client is an educational tool designed to explore the inner workings of a complex, distributed P2P system.
 
-## Screenshot
+## In Action
 
-*(This is a placeholder for you to add your own image! After running the program, take a screenshot of your terminal showing the successful download, save it in your project's root directory as `gopherswarm-demo.png`, and this will automatically display it.)*
+A screenshot of GoPherSwarm successfully downloading a file from the BitTorrent network, showcasing the real-time progress bar and download speed.
 
-![GoPherSwarm Execution](./gopherswarm-demo.png)
+![GoPherSwarm Progress Bar](./assets/progress-bar.png)
+
+<details>
+  <summary><b>Click to see the startup and tracker communication details</b></summary>
+  
+  The client starts by parsing the torrent file, extracting its metadata, and making a request to the tracker to discover peers before initiating the download.
+  
+  ![GoPherSwarm Startup Log](./assets/startup-log.png)
+</details>
 
 ## Features
 
