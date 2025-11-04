@@ -1,10 +1,9 @@
 # GoPherSwarm - A BitTorrent Client in Go
 
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" width="55" height="55" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" width="55" height="55" alt="Go Logo" />
   &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="https://www.svgrepo.com/svg/515054/bittorrent" width="55" height="55" />
-
+  <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/BitTorrent_logo.svg" width="55" height="55" alt="BitTorrent Logo" />
 </p>
 <p align="center">
   <i>A functional BitTorrent client written from scratch to explore concurrency, networking, and distributed systems in Go.</i>
@@ -18,7 +17,7 @@ This client is an educational tool designed to explore the inner workings of a c
 
 ## Screenshot
 
-*(This is a placeholder for you to add your own image! After running the program, take a screenshot of the terminal showing the progress bar and successful download, save it in your project directory as `gopherswarm-demo.png`, and this will automatically display it.)*
+*(This is a placeholder for you to add your own image! After running the program, take a screenshot of your terminal showing the successful download, save it in your project's root directory as `gopherswarm-demo.png`, and this will automatically display it.)*
 
 ![GoPherSwarm Execution](./gopherswarm-demo.png)
 
@@ -31,7 +30,7 @@ This client is an educational tool designed to explore the inner workings of a c
     -   Bitfield exchange
     -   Choke/Unchoke mechanism
     -   Interested/Not Interested messages
-    -   Request/Piece/Cancel message flow for data transfer
+    -   Request/Piece message flow for data transfer
 -   **Concurrent Downloading:** Utilizes Go's powerful concurrency features (goroutines and channels) to download from multiple peers simultaneously.
 -   **Pipelined Requests:** Requests multiple blocks of a piece at once to keep the TCP connection saturated and maximize download speed.
 -   **Piece Verification:** Verifies the SHA-1 hash of every downloaded piece to ensure data integrity.
@@ -43,39 +42,23 @@ The client is built on a concurrent "Foreman and Workers" model, separating stat
 
 ```mermaid
 graph TD
-    subgraph You (GoPherSwarm Client)
-        A(main.go) -- Starts --> C(Client);
-        C -- Spawns Workers --> D{PeerWorker 1};
-        C -- Spawns Workers --> E{PeerWorker 2};
-        C -- Spawns Workers --> F{...};
-        C -- Creates & Runs --> G(PieceManager);
-        D -- Sends Completed Pieces --> G;
-        E -- Sends Completed Pieces --> G;
-        F -- Sends Completed Pieces --> G;
-        G -- Provides Work --> D;
-        G -- Provides Work --> E;
-        G -- Provides Work --> F;
+    subgraph "You (GoPherSwarm Client)"
+        A["main.go"] --> C["Client Orchestrator"];
+        C --> G["PieceManager (Foreman)"];
+        C -- spawns --> W["Peer Workers (Pool of Goroutines)"];
+        G -- provides work pieces --> W;
+        W -- sends completed pieces --> G;
     end
 
-    subgraph The Internet
-        B[Tracker Server];
-        P1(Peer 1);
-        P2(Peer 2);
-        P3(Peer 3);
+    subgraph "The Internet"
+        B["Tracker Server"];
+        P["Other Peers in Swarm"];
     end
 
-    You -- 1. Reads --> TorrentFile([.torrent file]);
-    TorrentFile -- 2. Gets Tracker URL --> C;
-    C -- 3. Announces & gets peer list --> B;
-    B -- 4. Returns Peer IPs --> C;
-    C -- 5. Connects Workers --> P1;
-    C -- 5. Connects Workers --> P2;
-    C -- 5. Connects Workers --> P3;
-    D <--> P1;
-    E <--> P2;
-    F <--> P3;
-
-    style You fill:#e6f7ff,stroke:#333,stroke-width:2px
+    A -- reads --> TF([".torrent file"]);
+    C -- announces to --> B;
+    B -- returns peer IPs --> C;
+    W -- connects and exchanges data with --> P;
 ```
 
 -   **`main.go`:** The entry point. Handles command-line arguments, initiates the download, and manages the final file assembly.
@@ -84,7 +67,7 @@ graph TD
 -   **`p2p/tracker.go`:** Handles all HTTP communication with the torrent's tracker to retrieve a list of peers.
 -   **`p2p/message.go` & `p2p/peer.go`:** Defines the low-level data structures and serialization/deserialization logic for the peer wire protocol.
 -   **`p2p/piece.go`:** The "Foreman". A central `PieceManager` that tracks the state of every piece (needed, in-progress, verified) and manages the work queue.
--   **`p2p/client.go`:** The "Orchestrator". Manages the overall download state and spawns a dedicated "Worker" goroutine for each peer connection. The `startPeerWorker` function contains the core state machine for downloading pieces from a single peer.
+-   **`p2p/client.go`:** The "Orchestrator". Manages the overall download state and spawns a dedicated "Worker" goroutine for each peer connection.
 
 ## How to Run
 
@@ -107,6 +90,13 @@ To start a download, run the executable with the path to a `.torrent` file as th
 The application will connect to the tracker, find peers, and begin downloading. The final file will be saved in the same directory where you run the command.
 
 Press `Ctrl+C` at any time to gracefully shut down the client.
+
+## Acknowledgements
+
+This project was a significant learning endeavor, and its development was greatly aided by the excellent resources from the community. Special thanks to:
+
+-   **Arpit Bhayani** for his clear and insightful videos on peer-to-peer networks and system design.
+-   **Jesse Li** for the incredibly detailed and well-written blog post, "[Building a BitTorrent client from the ground up in Go](https://blog.jse.li/posts/torrent/)," which served as an invaluable reference.
 
 ## Key Concepts Learned
 
