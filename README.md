@@ -1,8 +1,25 @@
 # GoPherSwarm - A BitTorrent Client in Go
 
+<p align="center">
+  <img src="https://go.dev/blog/go-brand/Go-Logo_Blue.png" width="150" alt="Go Logo">
+  &nbsp; &nbsp; &nbsp; &nbsp;
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/BitTorrent_logo.svg/240px-BitTorrent_logo.svg.png" width="150" alt="BitTorrent Logo">
+</p>
+<p align="center">
+  <i>A functional BitTorrent client written from scratch to explore concurrency, networking, and distributed systems in Go.</i>
+</p>
+
+---
+
 GoPherSwarm is a functional BitTorrent client written from scratch in Go. This project was built as a deep dive into concurrency, networking, and low-level protocol implementation. It is capable of parsing `.torrent` files, communicating with trackers, connecting to peers, and downloading files from the BitTorrent network.
 
 This client is an educational tool designed to explore the inner workings of a complex, distributed P2P system.
+
+## Screenshot
+
+*(This is a placeholder for you to add your own image! After running the program, take a screenshot of the terminal showing the progress bar and successful download, save it in your project directory as `gopherswarm-demo.png`, and this will automatically display it.)*
+
+![GoPherSwarm Execution](./gopherswarm-demo.png)
 
 ## Features
 
@@ -21,7 +38,44 @@ This client is an educational tool designed to explore the inner workings of a c
 
 ## Architecture
 
-The client is built on a concurrent "Foreman and Workers" model, separating state management from network I/O.
+The client is built on a concurrent "Foreman and Workers" model, separating state management from network I/O. The overall data flow follows the classic BitTorrent architecture.
+
+```mermaid
+graph TD
+    subgraph You (GoPherSwarm Client)
+        A(main.go) -- Starts --> C(Client);
+        C -- Spawns Workers --> D{PeerWorker 1};
+        C -- Spawns Workers --> E{PeerWorker 2};
+        C -- Spawns Workers --> F{...};
+        C -- Creates & Runs --> G(PieceManager);
+        D -- Sends Completed Pieces --> G;
+        E -- Sends Completed Pieces --> G;
+        F -- Sends Completed Pieces --> G;
+        G -- Provides Work --> D;
+        G -- Provides Work --> E;
+        G -- Provides Work --> F;
+    end
+
+    subgraph The Internet
+        B[Tracker Server];
+        P1(Peer 1);
+        P2(Peer 2);
+        P3(Peer 3);
+    end
+
+    You -- 1. Reads --> TorrentFile([.torrent file]);
+    TorrentFile -- 2. Gets Tracker URL --> C;
+    C -- 3. Announces & gets peer list --> B;
+    B -- 4. Returns Peer IPs --> C;
+    C -- 5. Connects Workers --> P1;
+    C -- 5. Connects Workers --> P2;
+    C -- 5. Connects Workers --> P3;
+    D <--> P1;
+    E <--> P2;
+    F <--> P3;
+
+    style You fill:#e6f7ff,stroke:#333,stroke-width:2px
+```
 
 -   **`main.go`:** The entry point. Handles command-line arguments, initiates the download, and manages the final file assembly.
 -   **`p2p/bencode.go`:** A robust, from-scratch parser and marshaller for the Bencode data format.
@@ -35,7 +89,7 @@ The client is built on a concurrent "Foreman and Workers" model, separating stat
 
 ### Prerequisites
 - Go 1.18 or higher.
-- A `.torrent` file for a well-seeded, publicly available file (e.g., a Linux distribution like Ubuntu).
+- A `.torrent` file for a well-seeded, publicly available file (e.g., a Linux distribution like [Ubuntu](https://ubuntu.com/download/alternative-downloads)).
 
 ### Build
 ```bash
@@ -46,7 +100,7 @@ go build
 To start a download, run the executable with the path to a `.torrent` file as the argument:
 
 ```bash
-./gopherswarm /path/to/your/torrentfile.torrent
+./gopherswarm /path/to/your/ubuntu.iso.torrent
 ```
 
 The application will connect to the tracker, find peers, and begin downloading. The final file will be saved in the same directory where you run the command.
