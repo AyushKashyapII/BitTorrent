@@ -1,7 +1,7 @@
 # GoPherSwarm - A BitTorrent Client in Go
 
 <p align="center">
-  <img src="https://go.dev/blog/go-brand/Go-Logo_Blue.png" width="150" alt="Go Logo">
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" width="55" height="55" />
   &nbsp; &nbsp; &nbsp; &nbsp;
   <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/BitTorrent_logo.svg/240px-BitTorrent_logo.svg.png" width="150" alt="BitTorrent Logo">
 </p>
