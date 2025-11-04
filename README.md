@@ -18,7 +18,7 @@ This client is an educational tool designed to explore the inner workings of a c
 
 A screenshot of GoPherSwarm successfully downloading a file from the BitTorrent network, showcasing the real-time progress bar and download speed.
 
-![GoPherSwarm Progress Bar](./assets/Screenshot 2025-11-04 150159.png.png)
+![GoPherSwarm Progress Bar](./assets/Screenshot 2025-11-04 150159.png)
 
 <details>
   <summary><b>Click to see the startup and tracker communication details</b></summary>
