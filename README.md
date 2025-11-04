@@ -3,7 +3,8 @@
 <p align="center">
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" width="55" height="55" />
   &nbsp; &nbsp; &nbsp; &nbsp;
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/BitTorrent_logo.svg/240px-BitTorrent_logo.svg.png" width="150" alt="BitTorrent Logo">
+  <img src="https://www.svgrepo.com/svg/515054/bittorrent" width="55" height="55" />
+
 </p>
 <p align="center">
   <i>A functional BitTorrent client written from scratch to explore concurrency, networking, and distributed systems in Go.</i>
