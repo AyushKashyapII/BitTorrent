@@ -80,7 +80,7 @@ To start a download, run the executable with the path to a `.torrent` file as th
 ./gopherswarm /path/to/your/ubuntu.iso.torrent
 ```
 
-The application will connect to the tracker, find peers, and begin downloading. The final file will be saved in the same directory where you run the command.
+The application connects to tracker, find peers, and begin downloading. The final file will be saved in the same directory where you run the command.
 
 Press `Ctrl+C` at any time to gracefully shut down the client.
 
